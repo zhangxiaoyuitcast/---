@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <link rel="stylesheet" href="bsae1.css">
+    </head>
+    <body>
+    <div id="middle">
+    	<ul>
+    	
+        </ul>
+        <div id="startBtn">开始滑动模式</div>
+    </div>
+    
+    </body>
+</html>
+
+	<script>
+		var  oldChangeLiIndexs,moving = false;
+			btn = document.getElementById("startBtn"),
+		    ul = document.getElementsByTagName("ul")[0],
+		    sopportTouch = "ontouchstart" in document,
+		    tapClick = "click",
+		    tapStart = "mousedown",
+		    option = {
+		    	"imgSrc" : "images/01.jpg",
+		    	"row" : 5,
+		    	"col" : 5,
+		    	"width" : 120
+		    };
+		 
+		 // 初始化 显示图片
+		 init()
+		 function init(){
+		 	var wid = option.width,
+		        row = option.row,
+        		col = option.col,
+        		pos=[];
+        		ul.innerHTML="";
+        		// 创建动态li标签
+        		for(var i = 0 ; i <row * col ; i++){
+        			ul.innerHTML+="<li></li>"
+        		}
+        		// ul的宽高
+        		li = document.getElementsByTagName("li");
+        		ul.style.width = col * wid +"px";
+        		ul.style.height= row * wid +"px";
+                  // 求 四个点坐标
+        		for(var i = 0 ; i <option.row ; i++){
+        			for(var ii = 0 ; ii<option.col ; ii++){
+        				pos.push([i*wid,ii*wid])
+        			}
+        		}
+        		posC = pos ;
+        		// 渲染图片
+        		for(var i = 0 ; i < li.length; i++){
+        			li[i].style.backgroundImage = "url("+option.imgSrc+")";
+        			li[i].style.backgroundSize = col * wid + "px" + row * wid + "px";
+        			li[i].style.width = wid + "px";
+        			li[i].style.height = wid + "px";
+        			li[i].style.top = pos[i][0] + "px";
+        			li[i].style.left = pos[i][1] + "px";
+        			li[i].setAttribute("data", pos[i][0] +","+ pos[i][1]);
+        			li[i].style.backgroundPosition="-"+pos[i][1] + "px -" + pos[i][0] + "px";
+        			// console.log(li[i].style.backgroundPosition)
+        			li[i].indexs = i ;
+        		}
+        		btn.addEventListener("click", start)
+		 }
+
+		 // 开始 隐藏一个 计时
+		 function start(){
+		 	var _this =this;
+		 	modle = 1 ;
+		 	if(_this.innerText == "开始滑动模式" || _this.
+		 		innerText.indexOf("过关") != -1){
+		 		// 4个数随机 让第几个数变空白
+		 		hiddenLi = parseInt(Math.random()*li.length);
+		 		moving = false;
+		 		li[hiddenLi].id="hidden";
+		 		_this.innerText = "停止打乱";
+		 		goTime = setInterval(function(){
+		 			// console.log(1)
+		 			findRemovableLi();
+		 		},100)
+		 	}
+		 	else if(_this.innerText == "停止打乱"){
+		 		var times = 0 ;
+		 		clearInterval(goTime);
+		 		_this.innerText = "0s";
+		 		start = setInterval(function(){
+		 			times++;
+		 			_this.innerText = times + "s";
+		 		},1000)
+		 	}
+		   for(var i = 0 ; i<li.length; i++){
+		   	li[i].addEventListener(tapClick,clickLi)
+		   }
+		 }
+
+		 // 开始 打乱
+
+		 function findRemovableLi(){
+		 	var blankLi = document.getElementById("hidden"),
+		 	    liList = document.getElementsByTagName("li"),
+		 	    blankLiTop = parseInt(blankLi.style.top),// 获取隐藏
+		 	    blankLiLeft = parseInt(blankLi.style.left),
+		 	    removableList =[];
+		 	    // 获取所有li的坐标值
+		 	    for(var i = 0 ; i <liList.length; i++){
+		 	    	var liTop = parseInt(liList[i].style.top),
+		 	    	    liLeft = parseInt(liList[i].style.left);
+		 	    	 // console.log(liTop,liLeft)
+		 	    	 if((liTop==blankLiTop && (liLeft==blankLiLeft+ option.width || liLeft == blankLiLeft - option.width)) || (liLeft == blankLiLeft && (liTop == blankLiTop + option.width || liTop == blankLiTop - option.width))){
+		 	    	 	removableList.push([liList[i].indexs,liTop,liLeft,i])
+		 	    	 }
+		 	    }
+		 	    // console.log(removableList)
+
+		 	    if(removableList.length!=0){
+		 	    	var num = parseInt(Math.random()*removableList.length);
+		 	    	changeLiIndexs = removableList[num][0];
+		 	    	if(changeLiIndexs == oldChangeLiIndexs){
+		 	    		findRemovableLi();
+		 	    	}
+		 	    	else{
+		 	    		// console.log("改变图片位置")
+		 	    		moveLi(
+		 	    			liList[removableList[num][3]], removableList[num][1], removableList[num][2], blankLiTop, blankLiLeft);
+          				oldChangeLiIndexs = changeLiIndexs;
+		 	    	}
+
+		 	    }
+		 }
+		 // 改变图片位置函数
+		 function moveLi(_this,currentLiTop,currentLiLeft,blankTop,blankLeft, blankLi){
+		 	// 当前的li 高 左 隐藏的 高 左 li标签
+		 	moving =true;
+		 	_this.style.top = blankTop + "px";
+		 	_this.style.left = blankLeft + "px";
+
+		 	var hid = document.getElementById("hidden");
+		 	if(hid){
+		 		hid.style.top = currentLiTop + "px";
+		 		hid.style.left = currentLiLeft + "px";
+		 	}
+		 	if(btn.innerText!= "停止打乱") checkComplate()
+		 		setTimeout(function() {
+			        moving = false;
+			    }, 500);
+		 }
+         // 点击移动图片
+		 function clickLi(){
+		 	if (moving) return false;
+		 	var _this = this;
+		 	// 获取 已经生成的li 和 隐藏的li 坐标
+		 	currentLiTop = parseInt(this.style.top),
+		 	currentLiLeft = parseInt(this.style.left),
+		 	blankTop = parseInt(document.getElementById("hidden").style.top),
+		 	blankLeft = parseInt(document.getElementById("hidden").style.left);
+		 	if(currentLiTop==blankTop){
+		 		if(currentLiLeft==blankLeft-option.width||currentLiLeft==blankLeft+option.width){
+		 			moveLi(_this, currentLiTop, currentLiLeft, blankTop, blankLeft);
+		 		}
+		 	}
+		 	else if(currentLiLeft==blankLeft){
+		 		if(currentLiTop==blankTop-option.width||currentLiTop+option.width){
+		 			moveLi(_this, currentLiTop, currentLiLeft, blankTop, blankLeft);
+		 		}
+		 	}
+
+		 }
+		 // 最后成功
+		 function checkComplate(){
+		 	var newLi = document.getElementsByTagName("li"),
+		 	complate=false;
+		 	for(var i = 0 ; i <newLi.length ; i++){
+		 		var currentLiTop =parseInt(newLi[i].style.top),
+		 			currentLiLeft= parseInt(newLi[i].style.left),
+		 			topLeft = currentLiTop +","+ currentLiLeft,
+		 			data = newLi[i].attributes.data.value;
+		 			if(data != topLeft){
+		 				return false;
+		 			}
+		 			else{
+		 				complate=true;
+		 			}
+		 	};
+		 	if(complate){
+		 		if(modle==1){
+		 			clearInterval(start);
+		 			setTimeout(function(){
+		 				document.getElementById("hidden").id=""
+		 			}, 500);
+		 			var txt = btn.innerText;
+		 			btn.innerText = "过关！共用了" + txt;
+		 			moving =true;
+		 		}
+		 		for(var i = 0 ; i <newLi.length ; i++){
+		 			li[i].removeEventListener(tapClick, clickLi)
+		 		}
+		 	}
+
+		 }
+
+
+	</script>
